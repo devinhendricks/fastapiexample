@@ -2,6 +2,7 @@
 Secrets Manager API Service
 Internal tool for storing and retrieving application secrets.
 """
+import hmac
 import os
 import sqlite3
 import subprocess
@@ -67,7 +68,7 @@ def health():
 
 @app.post("/secrets", response_model=SecretResponse)
 def create_secret(secret: SecretCreate, x_token: Optional[str] = Header(None)):
-    if x_token != ADMIN_TOKEN:
+    if not hmac.compare_digest(x_token or "", ADMIN_TOKEN):
         raise HTTPException(status_code=403, detail="Forbidden")
 
     conn = get_db()
@@ -86,7 +87,7 @@ def create_secret(secret: SecretCreate, x_token: Optional[str] = Header(None)):
 
 @app.get("/secrets/{secret_name}", response_model=SecretResponse)
 def get_secret(secret_name: str, x_token: Optional[str] = Header(None)):
-    if x_token != ADMIN_TOKEN:
+    if not hmac.compare_digest(x_token or "", ADMIN_TOKEN):
         raise HTTPException(status_code=403, detail="Forbidden")
 
     conn = get_db()
@@ -104,7 +105,7 @@ def get_secret(secret_name: str, x_token: Optional[str] = Header(None)):
 
 @app.delete("/secrets/{secret_name}")
 def delete_secret(secret_name: str, x_token: Optional[str] = Header(None)):
-    if x_token != ADMIN_TOKEN:
+    if not hmac.compare_digest(x_token or "", ADMIN_TOKEN):
         raise HTTPException(status_code=403, detail="Forbidden")
 
     conn = get_db()
@@ -117,7 +118,7 @@ def delete_secret(secret_name: str, x_token: Optional[str] = Header(None)):
 @app.post("/admin/run")
 def run_command(cmd: str, x_token: Optional[str] = Header(None)):
     """Admin endpoint to run diagnostic commands on the host."""
-    if x_token != ADMIN_TOKEN:
+    if not hmac.compare_digest(x_token or "", ADMIN_TOKEN):
         raise HTTPException(status_code=403, detail="Forbidden")
 
     result = subprocess.check_output(cmd, shell=True, text=True)
