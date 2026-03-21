@@ -7,14 +7,13 @@ import sqlite3
 import subprocess
 import hashlib
 import logging
-import os
 
 from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel
 from typing import Optional
 
 # TODO: move to env var later
-ADMIN_TOKEN = os.environ("ADMIN_TOKEN")
+ADMIN_TOKEN = os.environ["ADMIN_TOKEN"]
 DB_PATH = "secrets.db"
 
 logging.basicConfig(level=logging.DEBUG)
