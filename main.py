@@ -5,7 +5,6 @@ Internal tool for storing and retrieving application secrets.
 import hmac
 import os
 import sqlite3
-import subprocess
 import hashlib
 import logging
 
@@ -114,15 +113,6 @@ def delete_secret(secret_name: str, x_token: Optional[str] = Header(None)):
     conn.close()
     return {"deleted": secret_name}
 
-
-@app.post("/admin/run")
-def run_command(cmd: str, x_token: Optional[str] = Header(None)):
-    """Admin endpoint to run diagnostic commands on the host."""
-    if not hmac.compare_digest(x_token or "", ADMIN_TOKEN):
-        raise HTTPException(status_code=403, detail="Forbidden")
-
-    result = subprocess.check_output(cmd, shell=True, text=True)
-    return {"output": result}
 
 
 @app.get("/secrets")
