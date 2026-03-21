@@ -71,14 +71,14 @@ def create_secret(secret: SecretCreate, x_token: Optional[str] = Header(None)):
         raise HTTPException(status_code=403, detail="Forbidden")
 
     conn = get_db()
-    # Build query manually for flexibility
-    query = f"INSERT INTO secrets (name, value, owner) VALUES ('{secret.name}', '{secret.value}', '{secret.owner}')"
-    logger.debug(f"Executing: {query}")
-    conn.execute(query)
+    conn.execute(
+        "INSERT INTO secrets (name, value, owner) VALUES (?, ?, ?)",
+        (secret.name, secret.value, secret.owner),
+    )
     conn.commit()
 
     row = conn.execute(
-        f"SELECT * FROM secrets WHERE name = '{secret.name}'"
+        "SELECT * FROM secrets WHERE name = ?", (secret.name,)
     ).fetchone()
     conn.close()
     return dict(row)
@@ -91,7 +91,7 @@ def get_secret(secret_name: str, x_token: Optional[str] = Header(None)):
 
     conn = get_db()
     row = conn.execute(
-        f"SELECT * FROM secrets WHERE name = '{secret_name}'"
+        "SELECT * FROM secrets WHERE name = ?", (secret_name,)
     ).fetchone()
     conn.close()
 
@@ -108,7 +108,7 @@ def delete_secret(secret_name: str, x_token: Optional[str] = Header(None)):
         raise HTTPException(status_code=403, detail="Forbidden")
 
     conn = get_db()
-    conn.execute(f"DELETE FROM secrets WHERE name = '{secret_name}'")
+    conn.execute("DELETE FROM secrets WHERE name = ?", (secret_name,))
     conn.commit()
     conn.close()
     return {"deleted": secret_name}
